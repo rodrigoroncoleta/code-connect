@@ -9,7 +9,7 @@ export function RememberRow({ checked, onChange }: RememberRowProps) {
   return (
     <div className="flex items-center justify-between">
       <Checkbox id="remember" checked={checked} onChange={onChange} label="Lembrar-me" />
-      <a href="#" className="text-sm text-[#9ca3af] underline hover:text-[#22c55e] transition-colors">
+      <a href="#" className="text-sm text-muted underline hover:text-accent transition-colors">
         Esqueci a senha
       </a>
     </div>

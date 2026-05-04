@@ -5,8 +5,8 @@ interface AuthTemplateProps {
 
 export function AuthTemplate({ banner, children }: AuthTemplateProps) {
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-[#1a1a1a] rounded-2xl overflow-hidden flex" style={{ minHeight: '560px' }}>
+    <div className="min-h-screen bg-page flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl bg-surface rounded-2xl overflow-hidden flex" style={{ minHeight: '560px' }}>
         <div className="hidden md:block w-2/5 flex-shrink-0">
           {banner}
         </div>
