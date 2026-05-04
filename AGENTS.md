@@ -91,7 +91,30 @@ web/src/components/
 #### Tailwind CSS
 - Estilização exclusivamente via classes utilitárias do Tailwind — sem CSS inline ou arquivos `.css` por componente
 - Extrair classes repetidas para variáveis com `cn()` (clsx + tailwind-merge) quando a lógica condicional for complexa
-- Tokens de design (cores, espaçamentos customizados) definidos em `tailwind.config.ts`, não hardcoded
+- Tokens de design definidos no bloco `@theme` em `src/index.css` (Tailwind v4) — nunca hardcodar hex diretamente nas classes
+
+##### Paleta de cores (tokens `@theme`)
+| Token | Hex | Uso |
+|-------|-----|-----|
+| `page` | `#0d0d0d` | Fundo da página (`bg-page`) |
+| `surface` | `#171d1f` | Card / surface principal (`bg-surface`) |
+| `grafite` | `#00090e` | Elemento mais escuro (`bg-grafite`) |
+| `offwhite` | `#e1e1e1` | Texto principal (`text-offwhite`) |
+| `muted` | `#888888` | Texto secundário, fundo de input, divisores (`text-muted`, `bg-muted`) |
+| `accent` | `#81fe88` | Verde destaque — CTAs, links ativos (`bg-accent`, `text-accent`) |
+| `accent-hover` | `#6ee077` | Hover do verde destaque (`hover:bg-accent-hover`) |
+| `accent-text` | `#132e35` | Texto sobre fundo accent (`text-accent-text`) |
+
+##### Tamanhos de fonte — tokens Tailwind
+Usar sempre os tokens padrão do Tailwind mais próximos ao valor do Figma. **Nunca** usar `text-[Npx]` arbitrário.
+
+| Figma (px) | Classe Tailwind | Tailwind (px) |
+|-----------|-----------------|---------------|
+| 31 | `text-3xl` | 30 |
+| 22 | `text-xl` | 20 |
+| 18 | `text-lg` | 18 |
+| 15 | `text-sm` | 14 |
+| 12–12.5 | `text-xs` | 12 |
 
 #### Testes de componentes
 - Todo componente deve ter um arquivo `PascalCase.test.tsx` na mesma pasta
