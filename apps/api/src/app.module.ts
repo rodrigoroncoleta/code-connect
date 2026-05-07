@@ -4,6 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { Comment } from './posts/comment.entity';
+import { PostLike } from './posts/post-like.entity';
+import { Post } from './posts/post.entity';
+import { PostsModule } from './posts/posts.module';
 import { User } from './users/user.entity';
 import { UsersModule } from './users/users.module';
 
@@ -19,12 +23,13 @@ import { UsersModule } from './users/users.module';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User],
+        entities: [User, Post, Comment, PostLike],
         synchronize: true,
       }),
     }),
     UsersModule,
     AuthModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

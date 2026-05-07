@@ -61,27 +61,27 @@ describe('UsersService', () => {
     it('deve retornar o usuário com passwordHash quando encontrado', async () => {
       await service.create({ name: 'A', email: 'a@test.com', password: 'abc123' });
 
-      const found = service.findByEmail('a@test.com');
+      const found = await service.findByEmail('a@test.com');
       expect(found).toBeDefined();
       expect(found!.email).toBe('a@test.com');
       expect(found!.passwordHash).toBeDefined();
     });
 
-    it('deve retornar undefined quando e-mail não encontrado', () => {
-      expect(service.findByEmail('naoexiste@test.com')).toBeUndefined();
+    it('deve retornar undefined quando e-mail não encontrado', async () => {
+      expect(await service.findByEmail('naoexiste@test.com')).toBeUndefined();
     });
   });
 
   describe('findById', () => {
     it('deve retornar o usuário quando encontrado', async () => {
       const created = await service.create({ name: 'A', email: 'a@test.com', password: 'abc123' });
-      const found = service.findById(created.id);
+      const found = await service.findById(created.id);
       expect(found).toBeDefined();
       expect(found!.id).toBe(created.id);
     });
 
-    it('deve retornar undefined quando id não encontrado', () => {
-      expect(service.findById(999)).toBeUndefined();
+    it('deve retornar undefined quando id não encontrado', async () => {
+      expect(await service.findById(999)).toBeUndefined();
     });
   });
 });

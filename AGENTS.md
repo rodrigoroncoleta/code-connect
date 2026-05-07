@@ -32,6 +32,51 @@ Monorepo pnpm com dois apps: **API** (NestJS) em `apps/api` e **Web** (React + V
 
 - **API**: NestJS 11, TypeScript 5.7, Jest, ESLint + Prettier
 - **Web**: React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest + Testing Library, ESLint
+- **Banco**: PostgreSQL 16 (Docker) + TypeORM 0.3
+
+## Banco de dados
+
+### Subir o PostgreSQL (Docker)
+
+```bash
+# Na raiz do monorepo
+docker compose up -d
+```
+
+O container `code-connect-postgres` sobe o PostgreSQL 16 na porta **5432** com volume persistente `postgres_data`.
+
+### Variáveis de ambiente da API
+
+Crie o arquivo `apps/api/.env` com o conteúdo abaixo (espelhando o `docker-compose.yml`):
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=codeConnect
+DB_PASSWORD=codeConnect123
+DB_NAME=code_connect
+
+JWT_SECRET=troque-por-um-segredo-forte
+```
+
+> O módulo `@nestjs/config` já está configurado com `ConfigModule.forRoot({ isGlobal: true })` e lê o `.env` automaticamente.
+
+### TypeORM
+
+- Driver: **pg** (PostgreSQL)
+- `synchronize: true` em desenvolvimento — o schema é criado/atualizado automaticamente a partir das entidades
+- Entidades declaradas em `AppModule` via array `entities: [...]`
+- Para produção, desativar `synchronize` e usar migrações TypeORM
+
+### Comandos úteis do banco
+
+| Propósito | Comando |
+|-----------|----------|
+| Subir banco | `docker compose up -d` |
+| Parar banco | `docker compose stop` |
+| Remover container + volume | `docker compose down -v` |
+| Logs do container | `docker compose logs -f postgres` |
+| Conectar via psql | `docker exec -it code-connect-postgres psql -U codeConnect -d code_connect` |
 
 ## Convenções
 
@@ -150,5 +195,14 @@ apps/
 
 ## Variáveis de ambiente
 
-- API porta configurável via `PORT` (padrão: 3000)
-- Nenhum `.env` configurado ainda — adicionar `@nestjs/config` se necessário
+### API (`apps/api/.env`)
+
+| Variável | Valor padrão (dev) | Descrição |
+|----------|--------------------|-----------|
+| `DB_HOST` | `localhost` | Host do PostgreSQL |
+| `DB_PORT` | `5432` | Porta do PostgreSQL |
+| `DB_USER` | `codeConnect` | Usuário do banco |
+| `DB_PASSWORD` | `codeConnect123` | Senha do banco |
+| `DB_NAME` | `code_connect` | Nome do banco |
+| `JWT_SECRET` | — | Segredo para assinar tokens JWT (obrigatório) |
+| `PORT` | `3000` | Porta HTTP da API |

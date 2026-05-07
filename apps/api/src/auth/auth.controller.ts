@@ -17,6 +17,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UserResponseDto } from '../users/dto/user-response.dto';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
@@ -26,7 +27,10 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -44,7 +48,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserResponseDto, description: 'Dados do usuário autenticado' })
   @ApiUnauthorizedResponse({ description: 'Token inválido ou ausente' })
-  getMe(@Request() req: { user: { id: number; email: string } }): UserResponseDto {
-    return new UserResponseDto({ id: req.user.id, email: req.user.email });
+  async getMe(@Request() req: { user: { id: number; email: string } }): Promise<UserResponseDto> {
+    const user = await this.usersService.findById(req.user.id);
+    return new UserResponseDto({ id: user!.id, name: user!.name, email: user!.email });
   }
 }

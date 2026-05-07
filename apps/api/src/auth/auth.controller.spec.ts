@@ -1,6 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserResponseDto } from '../users/dto/user-response.dto';
+import { UsersService } from '../users/users.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -16,7 +17,15 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        {
+          provide: UsersService,
+          useValue: {
+            findById: jest.fn().mockResolvedValue({ id: 1, name: 'João', email: 'joao@test.com' }),
+          },
+        },
+      ],
     })
       .overrideGuard(LocalAuthGuard)
       .useValue({ canActivate: (ctx: ExecutionContext) => true })
@@ -42,9 +51,9 @@ describe('AuthController', () => {
   });
 
   describe('getMe', () => {
-    it('deve retornar UserResponseDto com id e email do token', () => {
+    it('deve retornar UserResponseDto com id e email do token', async () => {
       const req = { user: { id: 1, email: 'joao@test.com' } };
-      const result = controller.getMe(req);
+      const result = await controller.getMe(req);
       expect(result).toBeInstanceOf(UserResponseDto);
       expect(result.id).toBe(1);
       expect(result.email).toBe('joao@test.com');
