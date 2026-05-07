@@ -44,7 +44,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserResponseDto, description: 'Dados do usuário autenticado' })
   @ApiUnauthorizedResponse({ description: 'Token inválido ou ausente' })
-  getMe(@Request() req: { user: { id: number; email: string } }): UserResponseDto {
-    return new UserResponseDto({ id: req.user.id, email: req.user.email });
+  async getMe(@Request() req: { user: { id: number; email: string } }): Promise<UserResponseDto> {
+    return this.authService.getMe(req.user.id);
   }
 }
