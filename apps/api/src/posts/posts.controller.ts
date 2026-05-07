@@ -24,7 +24,6 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
-import { UsersService } from '../users/users.service';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -35,24 +34,29 @@ import { PostsService } from './posts.service';
 @Controller('posts')
 @UseInterceptors(ClassSerializerInterceptor)
 export class PostsController {
-  constructor(
-    private readonly postsService: PostsService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly postsService: PostsService) {}
 
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiQuery({ name: 'q', required: false, description: 'Full-text search' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'sort', required: false, enum: ['recentes', 'populares'] })
   @ApiOkResponse({ type: PostListResponseDto })
   findAll(
     @Query('q') q?: string,
     @Query('page') page = '1',
     @Query('limit') limit = '12',
+    @Query('sort') sort: 'recentes' | 'populares' = 'recentes',
     @Request() req?: { user?: { id: number } },
   ): Promise<PostListResponseDto> {
-    return this.postsService.findAll(q, Number(page), Number(limit), req?.user?.id);
+    return this.postsService.findAll(
+      q,
+      Number(page),
+      Math.min(Number(limit), 100),
+      req?.user?.id,
+      sort,
+    );
   }
 
   @Get(':id')
@@ -69,12 +73,11 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: PostResponseDto })
-  async create(
+  create(
     @Body() dto: CreatePostDto,
     @Request() req: { user: { id: number } },
   ): Promise<PostResponseDto> {
-    const author = await this.usersService.findById(req.user.id);
-    return this.postsService.create(dto, author!);
+    return this.postsService.create(dto, req.user.id);
   }
 
   @Post(':id/likes')
@@ -82,12 +85,11 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiNoContentResponse()
-  async like(
+  like(
     @Param('id', ParseIntPipe) id: number,
     @Request() req: { user: { id: number } },
   ): Promise<void> {
-    const user = await this.usersService.findById(req.user.id);
-    return this.postsService.like(id, user!);
+    return this.postsService.like(id, req.user.id);
   }
 
   @Delete(':id/likes')
@@ -114,12 +116,11 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: CommentResponseDto })
-  async addComment(
+  addComment(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateCommentDto,
     @Request() req: { user: { id: number } },
   ): Promise<CommentResponseDto> {
-    const author = await this.usersService.findById(req.user.id);
-    return this.postsService.addComment(id, dto, author!);
+    return this.postsService.addComment(id, dto, req.user.id);
   }
 }

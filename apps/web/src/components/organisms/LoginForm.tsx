@@ -21,7 +21,7 @@ export function LoginForm() {
     setIsLoading(true)
     try {
       await login(email, password)
-      navigate('/')
+      navigate('/feed')
     } catch {
       setError('Email ou senha inválidos.')
     } finally {

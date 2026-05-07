@@ -25,7 +25,7 @@ export function FeedPage() {
     async (q: string, p: number) => {
       setIsLoading(true)
       try {
-        const res = await postsService.fetchPosts({ q: q || undefined, page: p, limit: LIMIT })
+        const res = await postsService.fetchPosts({ q: q || undefined, page: p, limit: LIMIT, sort: tab })
         setPosts(res.data)
         setTotal(res.total)
         setPage(p)
@@ -33,12 +33,12 @@ export function FeedPage() {
         setIsLoading(false)
       }
     },
-    [],
+    [tab],
   )
 
   useEffect(() => {
     load(appliedQuery, 1)
-  }, [appliedQuery, load])
+  }, [appliedQuery, tab, load])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()

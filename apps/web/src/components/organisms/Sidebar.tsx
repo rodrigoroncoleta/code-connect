@@ -1,6 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { Button } from '../atoms/Button'
 
 export function Sidebar() {
   const { isAuthenticated, logout } = useAuth()
@@ -18,15 +17,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex flex-col gap-2 items-center w-full">
-        {isAuthenticated && (
-          <Link to="/posts/new" className="w-full">
-            <Button variant="ghost">Publicar</Button>
-          </Link>
-        )}
-
         <NavItem to="/feed" icon="feed" label="Feed" />
-        <NavItem to="/profile" icon="account_circle" label="Perfil" />
-        <NavItem to="/about" icon="info" label="Sobre nós" />
 
         {isAuthenticated ? (
           <button

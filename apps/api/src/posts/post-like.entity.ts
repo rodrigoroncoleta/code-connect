@@ -11,6 +11,6 @@ export class PostLike {
   @ManyToOne(() => Post, (post) => post.likes, { onDelete: 'CASCADE' })
   post: Post;
 
-  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 }

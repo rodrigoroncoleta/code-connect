@@ -1,7 +1,7 @@
-import axios from 'axios'
+import axios, { type AxiosError } from 'axios'
 
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
 })
 
 api.interceptors.request.use((config) => {
@@ -11,3 +11,13 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+api.interceptors.response.use(
+  (res) => res,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token')
+    }
+    return Promise.reject(error)
+  },
+)

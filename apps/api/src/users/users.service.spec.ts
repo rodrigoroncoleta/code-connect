@@ -1,13 +1,40 @@
 import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from './user.entity';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
 
+  // In-memory store shared between repo methods
+  let store: User[] = [];
+  let nextId = 1;
+
+  const mockUsersRepo = {
+    findOneBy: jest.fn(async (where: Partial<User>) => {
+      if (where.email) return store.find((u) => u.email === where.email) ?? null;
+      if (where.id) return store.find((u) => u.id === where.id) ?? null;
+      return null;
+    }),
+    create: jest.fn((data: Partial<User>) => ({ ...data } as User)),
+    save: jest.fn(async (user: User) => {
+      const saved = { ...user, id: nextId++ };
+      store.push(saved as User);
+      return saved as User;
+    }),
+  };
+
   beforeEach(async () => {
+    store = [];
+    nextId = 1;
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService],
+      providers: [
+        UsersService,
+        { provide: getRepositoryToken(User), useValue: mockUsersRepo },
+      ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -67,8 +94,8 @@ describe('UsersService', () => {
       expect(found!.passwordHash).toBeDefined();
     });
 
-    it('deve retornar undefined quando e-mail não encontrado', async () => {
-      expect(await service.findByEmail('naoexiste@test.com')).toBeUndefined();
+    it('deve retornar null quando e-mail não encontrado', async () => {
+      expect(await service.findByEmail('naoexiste@test.com')).toBeNull();
     });
   });
 
@@ -80,8 +107,8 @@ describe('UsersService', () => {
       expect(found!.id).toBe(created.id);
     });
 
-    it('deve retornar undefined quando id não encontrado', async () => {
-      expect(await service.findById(999)).toBeUndefined();
+    it('deve retornar null quando id não encontrado', async () => {
+      expect(await service.findById(999)).toBeNull();
     });
   });
 });

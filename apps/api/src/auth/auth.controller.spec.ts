@@ -1,7 +1,6 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserResponseDto } from '../users/dto/user-response.dto';
-import { UsersService } from '../users/users.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -9,6 +8,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 
 const mockAuthService = {
   login: jest.fn().mockReturnValue({ access_token: 'mocked.jwt.token' }),
+  getMe: jest.fn().mockResolvedValue(new UserResponseDto({ id: 1, name: 'João', email: 'joao@test.com' })),
 };
 
 describe('AuthController', () => {
@@ -19,12 +19,6 @@ describe('AuthController', () => {
       controllers: [AuthController],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
-        {
-          provide: UsersService,
-          useValue: {
-            findById: jest.fn().mockResolvedValue({ id: 1, name: 'João', email: 'joao@test.com' }),
-          },
-        },
       ],
     })
       .overrideGuard(LocalAuthGuard)

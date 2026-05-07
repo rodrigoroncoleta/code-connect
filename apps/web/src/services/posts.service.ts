@@ -46,6 +46,7 @@ export async function fetchPosts(params?: {
   q?: string
   page?: number
   limit?: number
+  sort?: 'recentes' | 'populares'
 }): Promise<PostListResponse> {
   const { data } = await api.get<PostListResponse>('/posts', { params })
   return data

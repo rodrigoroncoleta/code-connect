@@ -18,11 +18,13 @@ export class CreatePostDto {
   @ApiProperty({ example: 'Neste post vamos explorar...' })
   @IsString()
   @MinLength(10)
+  @MaxLength(5000)
   description: string;
 
   @ApiPropertyOptional({ example: '# Código\n\n```tsx\nconst App = () => <div />\n```' })
   @IsOptional()
   @IsString()
+  @MaxLength(100000)
   content?: string;
 
   @ApiPropertyOptional({ example: 'https://example.com/thumb.png' })

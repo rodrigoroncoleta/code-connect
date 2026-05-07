@@ -66,7 +66,7 @@ export function PostCard({ post, onLike }: PostCardProps) {
               }`}
               aria-label={post.likedByMe ? 'Descurtir' : 'Curtir'}
             >
-              <span className="material-icons text-[22px]">code</span>
+              <span className="material-icons text-[22px]">favorite</span>
               <span>{post.likesCount}</span>
             </button>
 

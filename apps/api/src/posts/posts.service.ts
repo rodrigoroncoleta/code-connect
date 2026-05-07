@@ -2,10 +2,11 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
+import { UsersService } from '../users/users.service';
 import { Comment } from './comment.entity';
 import { PostLike } from './post-like.entity';
 import { Post } from './post.entity';
@@ -23,6 +24,7 @@ export class PostsService {
     private readonly commentsRepo: Repository<Comment>,
     @InjectRepository(PostLike)
     private readonly likesRepo: Repository<PostLike>,
+    private readonly usersService: UsersService,
   ) {}
 
   async findAll(
@@ -30,13 +32,13 @@ export class PostsService {
     page = 1,
     limit = 12,
     currentUserId?: number,
+    sort: 'recentes' | 'populares' = 'recentes',
   ): Promise<PostListResponseDto> {
     const qb = this.postsRepo
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.author', 'author')
       .loadRelationCountAndMap('post.likesCount', 'post.likes')
       .loadRelationCountAndMap('post.commentsCount', 'post.comments')
-      .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -45,6 +47,15 @@ export class PostsService {
         `(to_tsvector('portuguese', post.title || ' ' || post.description) @@ plainto_tsquery('portuguese', :q) OR post.title ILIKE :like OR post.description ILIKE :like)`,
         { q: q.trim(), like: `%${q.trim()}%` },
       );
+    }
+
+    if (sort === 'populares') {
+      qb.orderBy(
+        '(SELECT COUNT(*) FROM post_like pl WHERE pl."postId" = post.id)',
+        'DESC',
+      ).addOrderBy('post.createdAt', 'DESC');
+    } else {
+      qb.orderBy('post.createdAt', 'DESC');
     }
 
     const [posts, total] = await qb.getManyAndCount();
@@ -87,26 +98,29 @@ export class PostsService {
     return this.toPostDto(post, likedByMe);
   }
 
-  async create(dto: CreatePostDto, author: User): Promise<PostResponseDto> {
+  async create(dto: CreatePostDto, authorId: number): Promise<PostResponseDto> {
+    const author = await this.usersService.findById(authorId);
+    if (!author) throw new UnauthorizedException('Usuário não encontrado');
     const post = this.postsRepo.create({
       ...dto,
       tags: dto.tags ?? [],
       author,
     });
     const saved = await this.postsRepo.save(post);
-    return this.toPostDto({ ...saved, likesCount: 0, commentsCount: 0 } as any, false);
+    const postWithCounts = Object.assign(saved, { likesCount: 0, commentsCount: 0 });
+    return this.toPostDto(postWithCounts, false);
   }
 
-  async like(postId: number, user: User): Promise<void> {
+  async like(postId: number, userId: number): Promise<void> {
     const post = await this.postsRepo.findOneBy({ id: postId });
     if (!post) throw new NotFoundException('Post não encontrado');
 
     const existing = await this.likesRepo.findOne({
-      where: { post: { id: postId }, user: { id: user.id } },
+      where: { post: { id: postId }, user: { id: userId } },
     });
     if (existing) throw new ConflictException('Post já curtido');
 
-    await this.likesRepo.save(this.likesRepo.create({ post, user }));
+    await this.likesRepo.save(this.likesRepo.create({ post, user: { id: userId } as any }));
   }
 
   async unlike(postId: number, userId: number): Promise<void> {
@@ -138,10 +152,14 @@ export class PostsService {
   async addComment(
     postId: number,
     dto: CreateCommentDto,
-    author: User,
+    authorId: number,
   ): Promise<CommentResponseDto> {
-    const post = await this.postsRepo.findOneBy({ id: postId });
+    const [post, author] = await Promise.all([
+      this.postsRepo.findOneBy({ id: postId }),
+      this.usersService.findById(authorId),
+    ]);
     if (!post) throw new NotFoundException('Post não encontrado');
+    if (!author) throw new UnauthorizedException('Usuário não encontrado');
 
     const comment = this.commentsRepo.create({ content: dto.content, post, author });
     const saved = await this.commentsRepo.save(comment);
@@ -154,7 +172,10 @@ export class PostsService {
     });
   }
 
-  private toPostDto(post: Post & { likesCount?: number; commentsCount?: number }, likedByMe: boolean): PostResponseDto {
+  private toPostDto(
+    post: Post & { likesCount?: number; commentsCount?: number },
+    likedByMe: boolean,
+  ): PostResponseDto {
     return new PostResponseDto({
       id: post.id,
       title: post.title,
@@ -168,8 +189,8 @@ export class PostsService {
         name: post.author.name,
         email: post.author.email,
       },
-      likesCount: (post as any).likesCount ?? 0,
-      commentsCount: (post as any).commentsCount ?? 0,
+      likesCount: post.likesCount ?? 0,
+      commentsCount: post.commentsCount ?? 0,
       likedByMe,
     });
   }

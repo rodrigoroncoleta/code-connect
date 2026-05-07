@@ -27,13 +27,13 @@ export class Post {
   @Column({ type: 'varchar', nullable: true })
   thumbnail: string | null;
 
-  @Column('simple-array', { default: '' })
+  @Column({ type: 'json', default: '[]' })
   tags: string[];
 
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   author: User;
 
   @OneToMany(() => Comment, (comment) => comment.post)

@@ -16,6 +16,7 @@ export function PostDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [commentError, setCommentError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -53,10 +54,13 @@ export function PostDetailPage() {
     e.preventDefault()
     if (!post || !commentText.trim() || !isAuthenticated) return
     setIsSubmitting(true)
+    setCommentError(null)
     try {
       const comment = await postsService.addComment(post.id, commentText.trim())
       setComments((prev) => [...prev, comment])
       setCommentText('')
+    } catch {
+      setCommentError('Erro ao enviar comentário. Tente novamente.')
     } finally {
       setIsSubmitting(false)
     }
@@ -168,12 +172,13 @@ export function PostDetailPage() {
             type="button"
             onClick={handleLike}
             disabled={!isAuthenticated}
+            aria-label={post.likedByMe ? 'Descurtir' : 'Curtir'}
             className={`flex items-center gap-2 text-sm transition-colors ${
               isAuthenticated ? 'cursor-pointer' : 'cursor-default'
             } ${post.likedByMe ? 'text-accent' : 'text-muted hover:text-accent'}`}
             title={isAuthenticated ? undefined : 'Faça login para curtir'}
           >
-            <span className="material-icons text-xl">code</span>
+            <span className="material-icons text-xl">favorite</span>
             {post.likesCount} curtidas
           </button>
 
@@ -213,7 +218,8 @@ export function PostDetailPage() {
                 className="w-full bg-surface text-offwhite text-sm rounded-lg p-3 placeholder:text-muted outline-none resize-none focus:ring-1 focus:ring-accent"
                 aria-label="Comentário"
               />
-              <div className="flex justify-end">
+              <div className="flex flex-col items-end gap-2">
+                {commentError && <p className="text-sm text-red-400">{commentError}</p>}
                 <button
                   type="submit"
                   disabled={isSubmitting || !commentText.trim()}

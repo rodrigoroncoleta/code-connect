@@ -22,7 +22,7 @@ export function RegisterForm() {
     setIsLoading(true)
     try {
       await register(name, email, password)
-      navigate('/')
+      navigate('/feed')
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
       if (status === 409) {

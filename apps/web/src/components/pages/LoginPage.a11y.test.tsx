@@ -1,7 +1,19 @@
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { axe } from 'jest-axe'
+import { vi } from 'vitest'
 import { LoginPage } from './LoginPage'
+
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+  })),
+}))
 
 function renderWithRouter() {
   return render(
